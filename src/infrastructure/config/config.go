@@ -28,7 +28,6 @@ func init() {
 	appStatus := os.Getenv("ZENTRA_APP_STATUS")
 
 	if appStatus == "DEVELOPMENT" {
-
 		Conf = setUpForDevelopment()
 		return
 	}
