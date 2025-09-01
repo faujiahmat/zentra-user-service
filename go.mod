@@ -6,6 +6,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.20.1
 	go.elastic.co/ecslogrus v1.0.0
+	google.golang.org/grpc v1.67.3
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.30.2
 )
