@@ -23,6 +23,9 @@ func setUpForDevelopment() *Config {
 		log.Logger.WithFields(logrus.Fields{"location": "config.setUpForDevelopment", "section": "viper.ReadInConfig"}).Fatal(err)
 	}
 
+	currentAppConf := new(currentApp)
+	currentAppConf.GrpcPort = viper.GetString("CURRENT_APP_GRPC_PORT")
+
 	postgresConf := new(postgres)
 	postgresConf.Url = viper.GetString("POSTGRES_URL")
 	postgresConf.Dsn = viper.GetString("POSTGRES_DSN")
@@ -30,6 +33,7 @@ func setUpForDevelopment() *Config {
 	postgresConf.Password = viper.GetString("POSTGRES_PASSWORD")
 
 	return &Config{
-		Postgres: postgresConf,
+		CurrentApp: currentAppConf,
+		Postgres:   postgresConf,
 	}
 }

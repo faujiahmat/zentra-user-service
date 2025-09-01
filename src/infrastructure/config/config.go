@@ -10,6 +10,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+type currentApp struct {
+	GrpcPort string
+}
+
 type postgres struct {
 	Url      string
 	Dsn      string
@@ -18,7 +22,8 @@ type postgres struct {
 }
 
 type Config struct {
-	Postgres *postgres
+	CurrentApp *currentApp
+	Postgres   *postgres
 }
 
 var Conf *Config
