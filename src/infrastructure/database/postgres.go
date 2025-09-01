@@ -4,12 +4,13 @@ import (
 	"log"
 	"time"
 
+	"github.com/faujiahmat/zentra-user-service/src/infrastructure/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 func NewPostgres() *gorm.DB {
-	dsn := "postgresql://postgres:fauji3423+@localhost:5432/zentra-user-database"
+	dsn := config.Conf.Postgres.Dsn
 
 	db, err := gorm.Open(postgres.Open(dsn))
 
