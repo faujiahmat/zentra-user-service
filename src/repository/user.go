@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/faujiahmat/zentra-user-service/src/common/errors"
+	"github.com/faujiahmat/zentra-user-service/src/interface/repository"
 	"github.com/faujiahmat/zentra-user-service/src/model/dto"
 	"github.com/faujiahmat/zentra-user-service/src/model/entity"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -14,6 +15,12 @@ import (
 
 type UserImpl struct {
 	db *gorm.DB
+}
+
+func NewUser(db *gorm.DB) repository.User {
+	return &UserImpl{
+		db: db,
+	}
 }
 
 func (u *UserImpl) Create(ctx context.Context, data *dto.CreateReq) error {

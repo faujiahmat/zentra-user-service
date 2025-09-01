@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/faujiahmat/zentra-user-service/src/infrastructure/database"
+	"github.com/faujiahmat/zentra-user-service/src/repository"
 )
 
 func init() {
@@ -22,6 +23,8 @@ func handleCloseApp(closeCH chan struct{}) {
 
 	postgresDB := database.NewPostgres()
 	defer database.ClosePostgres(postgresDB)
+
+	userRepository := repository.NewUser(postgresDB)
 
 	go func() {
 		<-c
