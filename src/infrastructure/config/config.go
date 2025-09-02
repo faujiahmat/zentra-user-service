@@ -28,10 +28,21 @@ type postgres struct {
 	Password string
 }
 
+type redis struct {
+	AddrNode1 string
+	AddrNode2 string
+	AddrNode3 string
+	AddrNode4 string
+	AddrNode5 string
+	AddrNode6 string
+	Password  string
+}
+
 type Config struct {
 	CurrentApp *currentApp
 	Postgres   *postgres
 	ApiGateway *apiGateway
+	Redis      *redis
 }
 
 var Conf *Config

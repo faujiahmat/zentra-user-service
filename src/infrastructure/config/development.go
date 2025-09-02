@@ -32,6 +32,15 @@ func setUpForDevelopment() *Config {
 	postgresConf.User = viper.GetString("POSTGRES_USER")
 	postgresConf.Password = viper.GetString("POSTGRES_PASSWORD")
 
+	redisConf := new(redis)
+	redisConf.AddrNode1 = viper.GetString("REDIS_ADDR_NODE_1")
+	redisConf.AddrNode2 = viper.GetString("REDIS_ADDR_NODE_2")
+	redisConf.AddrNode3 = viper.GetString("REDIS_ADDR_NODE_3")
+	redisConf.AddrNode4 = viper.GetString("REDIS_ADDR_NODE_4")
+	redisConf.AddrNode5 = viper.GetString("REDIS_ADDR_NODE_5")
+	redisConf.AddrNode6 = viper.GetString("REDIS_ADDR_NODE_6")
+	redisConf.Password = viper.GetString("REDIS_PASSWORD")
+
 	apiGatewayConf := new(apiGateway)
 	apiGatewayConf.BaseUrl = viper.GetString("API_GATEWAY_BASE_URL")
 	apiGatewayConf.BasicAuth = viper.GetString("API_GATEWAY_BASIC_AUTH")
@@ -41,6 +50,7 @@ func setUpForDevelopment() *Config {
 	return &Config{
 		CurrentApp: currentAppConf,
 		Postgres:   postgresConf,
+		Redis:      redisConf,
 		ApiGateway: apiGatewayConf,
 	}
 }
