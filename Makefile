@@ -68,3 +68,20 @@ start:
 	rm -f ./cmd/main
 	go build -o cmd/main cmd/main.go
 	./cmd/main
+
+# Docker
+.PHONY: docker-up
+docker-up:
+	docker compose up -d
+
+.PHONY: docker-down
+docker-down:
+	docker compose down
+
+.PHONY: docker-logs
+docker-logs:
+	docker compose logs -f
+
+.PHONY: docker-build
+docker-build:
+	docker compose build
