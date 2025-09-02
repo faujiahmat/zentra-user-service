@@ -32,8 +32,15 @@ func setUpForDevelopment() *Config {
 	postgresConf.User = viper.GetString("POSTGRES_USER")
 	postgresConf.Password = viper.GetString("POSTGRES_PASSWORD")
 
+	apiGatewayConf := new(apiGateway)
+	apiGatewayConf.BaseUrl = viper.GetString("API_GATEWAY_BASE_URL")
+	apiGatewayConf.BasicAuth = viper.GetString("API_GATEWAY_BASIC_AUTH")
+	apiGatewayConf.BasicAuthUsername = viper.GetString("API_GATEWAY_BASIC_AUTH_USERNAME")
+	apiGatewayConf.BasicAuthPassword = viper.GetString("API_GATEWAY_BASIC_AUTH_PASSWORD")
+
 	return &Config{
 		CurrentApp: currentAppConf,
 		Postgres:   postgresConf,
+		ApiGateway: apiGatewayConf,
 	}
 }

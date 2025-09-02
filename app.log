@@ -1,0 +1,6 @@
+{"@timestamp":"2025-09-02T02:18:38.383+0700","ecs.version":"1.6.0","location":"config.setUpForDevelopment","log.level":"fatal","message":"chdir : The filename, directory name, or volume label syntax is incorrect.","section":"os.Chdir"}
+{"@timestamp":"2025-09-02T02:19:04.054+0700","ecs.version":"1.6.0","location":"config.setUpForDevelopment","log.level":"fatal","message":"chdir : The filename, directory name, or volume label syntax is incorrect.","section":"os.Chdir"}
+{"@timestamp":"2025-09-02T02:19:29.177+0700","ecs.version":"1.6.0","location":"config.setUpForDevelopment","log.level":"fatal","message":"chdir : The filename, directory name, or volume label syntax is incorrect.","section":"os.Chdir"}
+{"@timestamp":"2025-09-02T02:20:18.818+0700","ecs.version":"1.6.0","location":"config.setUpForDevelopment","log.level":"fatal","message":"chdir : The filename, directory name, or volume label syntax is incorrect.","section":"os.Chdir"}
+{"@timestamp":"2025-09-02T02:22:42.138+0700","POSTGRES_DSN":"postgresql://postgres:fauji3423+@localhost:5432/zentra-user-database","ecs.version":"1.6.0","location":"config.setUpForDevelopment","log.level":"info","message":"Cek apakah Viper sudah baca env"}
+{"@timestamp":"2025-09-02T02:26:01.944+0700","ecs.version":"1.6.0","log.level":"info","message":"grpc run in port: 50051"}

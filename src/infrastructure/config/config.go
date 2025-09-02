@@ -14,6 +14,13 @@ type currentApp struct {
 	GrpcPort string
 }
 
+type apiGateway struct {
+	BaseUrl           string
+	BasicAuth         string
+	BasicAuthUsername string
+	BasicAuthPassword string
+}
+
 type postgres struct {
 	Url      string
 	Dsn      string
@@ -24,6 +31,7 @@ type postgres struct {
 type Config struct {
 	CurrentApp *currentApp
 	Postgres   *postgres
+	ApiGateway *apiGateway
 }
 
 var Conf *Config
