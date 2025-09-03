@@ -12,3 +12,6 @@
 {"@timestamp":"2025-09-03T01:26:11.020+0700","ecs.version":"1.6.0","log.level":"info","message":"grpc run in port: 4400"}
 {"@timestamp":"2025-09-03T01:27:23.472+0700","ecs.version":"1.6.0","log.level":"info","message":"grpc run in port: 4400"}
 {"@timestamp":"2025-09-03T01:29:10.272+0700","ecs.version":"1.6.0","log.level":"info","message":"grpc run in port: 4400"}
+{"@timestamp":"2025-09-03T03:47:47.865+0700","ecs.version":"1.6.0","log.level":"info","message":"grpc run in port: 4400"}
+{"@timestamp":"2025-09-04T02:17:44.155+0700","ecs.version":"1.6.0","log.level":"info","message":"grpc run in port: 4400"}
+{"@timestamp":"2025-09-04T02:19:08.760+0700","ecs.version":"1.6.0","log.level":"info","message":"grpc run in port: 4400"}
