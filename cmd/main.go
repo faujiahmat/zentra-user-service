@@ -37,6 +37,9 @@ func main() {
 	postgresDB := database.NewPostgres()
 	defer database.ClosePostgres(postgresDB)
 
+	redisDB := database.NewRedisCluster()
+	defer redisDB.Close()
+
 	userRepository := repository.NewUser(postgresDB)
 
 	grpcClient := grpc.InitClient()
