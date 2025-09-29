@@ -24,6 +24,7 @@ func setUpForDevelopment() *Config {
 	}
 
 	currentAppConf := new(currentApp)
+	currentAppConf.RestfulAddress = viper.GetString("CURRENT_APP_RESTFUL_ADDRESS")
 	currentAppConf.GrpcPort = viper.GetString("CURRENT_APP_GRPC_PORT")
 
 	postgresConf := new(postgres)
@@ -47,10 +48,22 @@ func setUpForDevelopment() *Config {
 	apiGatewayConf.BasicAuthUsername = viper.GetString("API_GATEWAY_BASIC_AUTH_USERNAME")
 	apiGatewayConf.BasicAuthPassword = viper.GetString("API_GATEWAY_BASIC_AUTH_PASSWORD")
 
+	jwtConf := new(jwt)
+	jwtConf.PrivateKey = loadRSAPrivateKey(viper.GetString("JWT_PRIVATE_KEY"))
+	jwtConf.PublicKey = loadRSAPublicKey(viper.GetString("JWT_PUBLIC_KEY"))
+
+	imageKitConf := new(imageKit)
+	imageKitConf.Id = viper.GetString("IMAGEKIT_ID")
+	imageKitConf.BaseUrl = viper.GetString("IMAGEKIT_BASE_URL")
+	imageKitConf.PrivateKey = viper.GetString("IMAGEKIT_PRIVATE_KEY")
+	imageKitConf.PublicKey = viper.GetString("IMAGEKIT_PUBLIC_KEY")
+
 	return &Config{
 		CurrentApp: currentAppConf,
 		Postgres:   postgresConf,
 		Redis:      redisConf,
 		ApiGateway: apiGatewayConf,
+		Jwt:        jwtConf,
+		ImageKit:   imageKitConf,
 	}
 }

@@ -11,7 +11,8 @@ import (
 )
 
 type currentApp struct {
-	GrpcPort string
+	RestfulAddress string
+	GrpcPort       string
 }
 
 type apiGateway struct {
@@ -38,11 +39,25 @@ type redis struct {
 	Password  string
 }
 
+type jwt struct {
+	PrivateKey *rsa.PrivateKey
+	PublicKey  *rsa.PublicKey
+}
+
+type imageKit struct {
+	Id         string
+	BaseUrl    string
+	PrivateKey string
+	PublicKey  string
+}
+
 type Config struct {
 	CurrentApp *currentApp
 	Postgres   *postgres
-	ApiGateway *apiGateway
 	Redis      *redis
+	ApiGateway *apiGateway
+	Jwt        *jwt
+	ImageKit   *imageKit
 }
 
 var Conf *Config
@@ -52,10 +67,12 @@ func init() {
 	appStatus := os.Getenv("ZENTRA_APP_STATUS")
 
 	if appStatus == "DEVELOPMENT" {
+
 		Conf = setUpForDevelopment()
 		return
 	}
 
+	Conf = setUpForNonDevelopment(appStatus)
 }
 
 func loadRSAPrivateKey(privateKey string) *rsa.PrivateKey {
@@ -67,12 +84,27 @@ func loadRSAPrivateKey(privateKey string) *rsa.PrivateKey {
 		}).Fatal("failed to parse pem block containing the key")
 	}
 
+	// Coba PKCS#1 dulu
 	rsaPrivateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err == nil {
+		return rsaPrivateKey
+	}
+
+	// Kalau gagal, berarti PKCS#8
+	key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 	if err != nil {
 		log.Logger.WithFields(logrus.Fields{
 			"location": "config.loadRSAPrivateKey",
-			"section":  "x509.ParsePKCS1PrivateKey",
+			"section":  "x509.ParsePKCS8PrivateKey",
 		}).Fatalf("failed to parse rsa private key: %v", err)
+	}
+
+	rsaPrivateKey, ok := key.(*rsa.PrivateKey)
+	if !ok {
+		log.Logger.WithFields(logrus.Fields{
+			"location": "config.loadRSAPrivateKey",
+			"section":  "type assertion",
+		}).Fatal("failed to assert type to *rsa.PrivateKey")
 	}
 
 	return rsaPrivateKey

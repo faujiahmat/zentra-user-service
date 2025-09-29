@@ -22,10 +22,9 @@ func NewUserGrpc(us service.User) pb.UserServiceServer {
 	}
 }
 
-func (u *UserGrpcImpl) Create(ctx context.Context, rr *pb.RegisterReq) (*emptypb.Empty, error) {
+func (u *UserGrpcImpl) Create(ctx context.Context, ur *pb.RegisterReq) (*emptypb.Empty, error) {
 	data := &dto.CreateReq{}
-
-	if err := copier.Copy(data, rr); err != nil {
+	if err := copier.Copy(data, ur); err != nil {
 		return nil, err
 	}
 
@@ -47,7 +46,6 @@ func (u *UserGrpcImpl) FindByEmail(ctx context.Context, e *pb.Email) (*pb.FindUs
 	}
 
 	user := new(pb.User)
-
 	if err := copier.Copy(user, res); err != nil {
 		return nil, err
 	}
@@ -58,8 +56,8 @@ func (u *UserGrpcImpl) FindByEmail(ctx context.Context, e *pb.Email) (*pb.FindUs
 	return &pb.FindUserRes{Data: user}, nil
 }
 
-func (u *UserGrpcImpl) FindByRefreshToken(ctx context.Context, rt *pb.RefreshToken) (*pb.FindUserRes, error) {
-	res, err := u.userService.FindByRefreshToken(ctx, rt.Token)
+func (u *UserGrpcImpl) FindByRefreshToken(ctx context.Context, t *pb.RefreshToken) (*pb.FindUserRes, error) {
+	res, err := u.userService.FindByRefreshToken(ctx, t.Token)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +67,6 @@ func (u *UserGrpcImpl) FindByRefreshToken(ctx context.Context, rt *pb.RefreshTok
 	}
 
 	user := new(pb.User)
-
 	if err := copier.Copy(user, res); err != nil {
 		return nil, err
 	}
@@ -80,10 +77,9 @@ func (u *UserGrpcImpl) FindByRefreshToken(ctx context.Context, rt *pb.RefreshTok
 	return &pb.FindUserRes{Data: user}, nil
 }
 
-func (u *UserGrpcImpl) Upsert(ctx context.Context, l *pb.LoginWithGoogleReq) (*pb.User, error) {
+func (u *UserGrpcImpl) Upsert(ctx context.Context, data *pb.LoginWithGoogleReq) (*pb.User, error) {
 	req := new(dto.UpsertReq)
-
-	if err := copier.Copy(req, l); err != nil {
+	if err := copier.Copy(req, data); err != nil {
 		return nil, err
 	}
 

@@ -16,7 +16,7 @@ services:
         target: /etc/postgresql/postgresql.conf
       - type: bind
         source: ./docs/database/postgresql/pg_hba.conf
-        target: /etc/postgresql/pg_hba.conf   
+        target: /etc/postgresql/pg_hba.conf
     networks:
       - zentra-network
       - zentra-user-service-network
@@ -61,7 +61,7 @@ services:
       zentra-user-service-network:
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
     restart: on-failure
-  
+
   zentra-user-service-redis-node-3:
     container_name: zentra-user-service-redis-node-3
     image: redis:7.2.2
@@ -81,7 +81,7 @@ services:
       zentra-user-service-network:
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
     restart: on-failure
-  
+
   zentra-user-service-redis-node-4:
     container_name: zentra-user-service-redis-node-4
     image: redis:7.2.2
@@ -101,7 +101,7 @@ services:
       zentra-user-service-network:
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
     restart: on-failure
-  
+
   zentra-user-service-redis-node-5:
     container_name: zentra-user-service-redis-node-5
     image: redis:7.2.2
@@ -140,8 +140,8 @@ services:
         ipv4_address: 172.48.0.16
       zentra-user-service-network:
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
-    restart: on-failure  
-  
+    restart: on-failure
+
   zentra-user-service-redisinsight:
     container_name: zentra-user-service-redisinsight
     image: redislabs/redisinsight:2.50
@@ -149,6 +149,32 @@ services:
       - 5541:5540
     networks:
       - zentra-user-service-redis-network
+
+  zentra-user-service:
+    image: zentra-user-service:latest
+    container_name: zentra-user-service
+    ports:
+      - "3400:3400"
+      - "4400:4400"
+    networks:
+      - zentra-network
+      - zentra-user-service-network
+      - zentra-user-service-redis-network
+    depends_on:
+      - zentra-user-service-postgres
+      - zentra-user-service-redis-node-1
+      - zentra-user-service-redis-node-2
+      - zentra-user-service-redis-node-3
+      - zentra-user-service-redis-node-4
+      - zentra-user-service-redis-node-5
+      - zentra-user-service-redis-node-6
+    environment:
+      - ZENTRA_APP_STATUS=DEVELOPMENT
+      - ZENTRA_USER_SERVICE_WORKSPACE=/app/workspace
+    volumes:
+      - ./workspace:/app/workspace
+      - ./tmp:/app/workspace/tmp
+    restart: on-failure
 
 volumes:
   zentra-user-service-postgres-data:
@@ -167,6 +193,9 @@ volumes:
     name: zentra-user-service-redis-data-node-6
 
 networks:
+  zentra-network:
+    name: zentra-network
+    external: true
   zentra-user-service-network:
     name: zentra-user-service-network
     driver: bridge
@@ -176,6 +205,3 @@ networks:
     ipam:
       config:
         - subnet: 172.48.0.0/16
-  zentra-network:
-    name: zentra-network
-    external: true

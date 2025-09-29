@@ -68,25 +68,3 @@ start:
 	rm -f ./cmd/main
 	go build -o cmd/main cmd/main.go
 	./cmd/main
-
-.PHONY: setup-env
-setup-env:
-	export ZENTRA_USER_SERVICE_WORKSPACE="/c/Main Files/Harisenin.com/VIDEO BELAJAR RANDOM/golang/zentra-microservices/zentra-user-service"
-	export ZENTRA_APP_STATUS="DEVELOPMENT"
-
-# Docker
-.PHONY: docker-up
-docker-up:
-	docker compose up -d
-
-.PHONY: docker-down
-docker-down:
-	docker compose down
-
-.PHONY: docker-logs
-docker-logs:
-	docker compose logs -f
-
-.PHONY: docker-build
-docker-build:
-	docker compose build

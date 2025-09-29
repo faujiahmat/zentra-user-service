@@ -19,16 +19,12 @@ func NewPostgres() *gorm.DB {
 	})
 
 	if err != nil {
-		log.Logger.WithFields(logrus.Fields{
-			"location": "database.NewPostgres", "section": "gorm.Open",
-		}).Fatal(err)
+		log.Logger.WithFields(logrus.Fields{"location": "database.NewPostgres", "section": "gorm.Open"}).Fatal(err)
 	}
 
 	sqlDB, err := db.DB()
 	if err != nil {
-		log.Logger.WithFields(logrus.Fields{
-			"location": "database.NewPostgres", "section": "db.DB",
-		}).Fatal(err)
+		log.Logger.WithFields(logrus.Fields{"location": "database.NewPostgres", "section": "db.DB"}).Fatal(err)
 	}
 
 	sqlDB.SetMaxOpenConns(100)

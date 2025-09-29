@@ -2,9 +2,12 @@ package delivery
 
 import (
 	"context"
+	"fmt"
 
 	pb "github.com/faujiahmat/zentra-proto/protogen/otp"
 	"github.com/faujiahmat/zentra-user-service/src/common/log"
+	"github.com/faujiahmat/zentra-user-service/src/core/grpc/interceptor"
+	"github.com/faujiahmat/zentra-user-service/src/infrastructure/cbreaker"
 	"github.com/faujiahmat/zentra-user-service/src/infrastructure/config"
 	"github.com/faujiahmat/zentra-user-service/src/interface/delivery"
 	"github.com/sirupsen/logrus"
@@ -16,11 +19,12 @@ type OtpGrpcImpl struct {
 	client pb.OtpServiceClient
 }
 
-func NewOtpGrpc() (delivery.OtpGrpc, *grpc.ClientConn) {
+func NewOtpGrpc(unaryRequest *interceptor.UnaryRequest) (delivery.OtpGrpc, *grpc.ClientConn) {
 	var opts []grpc.DialOption
 	opts = append(
 		opts,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithUnaryInterceptor(unaryRequest.AddBasicAuth),
 	)
 
 	conn, err := grpc.NewClient(config.Conf.ApiGateway.BaseUrl, opts...)
@@ -32,26 +36,37 @@ func NewOtpGrpc() (delivery.OtpGrpc, *grpc.ClientConn) {
 
 	return &OtpGrpcImpl{
 		client: client,
-	}, nil
+	}, conn
 }
 
 func (u *OtpGrpcImpl) Send(ctx context.Context, email string) error {
-	_, err := u.client.Send(ctx, &pb.SendReq{
-		Email: email,
+	_, err := cbreaker.OtpGrpc.Execute(func() (any, error) {
+		_, err := u.client.Send(ctx, &pb.SendReq{
+			Email: email,
+		})
+		return nil, err
 	})
 
 	return err
 }
 
 func (u *OtpGrpcImpl) Verify(ctx context.Context, data *pb.VerifyReq) (*pb.VerifyRes, error) {
-	res, err := u.client.Verify(ctx, &pb.VerifyReq{
-		Email: data.Email,
-		Otp:   data.Otp,
+	res, err := cbreaker.OtpGrpc.Execute(func() (any, error) {
+		res, err := u.client.Verify(ctx, &pb.VerifyReq{
+			Email: data.Email,
+			Otp:   data.Otp,
+		})
+		return res, err
 	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	return res, err
+	user, ok := res.(*pb.VerifyRes)
+	if !ok {
+		return nil, fmt.Errorf("client.OtpGrpcImpl/Verify | unexpected type: %T", res)
+	}
+
+	return user, err
 }

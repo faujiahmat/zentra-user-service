@@ -8,7 +8,9 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/faujiahmat/zentra-user-service/src/cache"
 	"github.com/faujiahmat/zentra-user-service/src/core/grpc"
+	"github.com/faujiahmat/zentra-user-service/src/core/restful"
 	"github.com/faujiahmat/zentra-user-service/src/infrastructure/database"
 	"github.com/faujiahmat/zentra-user-service/src/repository"
 	"github.com/faujiahmat/zentra-user-service/src/service"
@@ -40,17 +42,25 @@ func main() {
 	redisDB := database.NewRedisCluster()
 	defer redisDB.Close()
 
-	userRepository := repository.NewUser(postgresDB)
+	userCache := cache.NewUser(redisDB)
+
+	userRepository := repository.NewUser(postgresDB, userCache)
 
 	grpcClient := grpc.InitClient()
 	defer grpcClient.Close()
 
-	userService := service.NewUser(grpcClient, userRepository)
+	userService := service.NewUser(grpcClient, userRepository, userCache)
 
 	grpcServer := grpc.InitServer(userService)
 	defer grpcServer.Stop()
 
 	go grpcServer.Run()
+
+	restfulClient := restful.InitClient()
+	restfulServer := restful.InitServer(restfulClient, userService)
+	defer restfulServer.Stop()
+
+	go restfulServer.Run()
 
 	<-closeCH
 }

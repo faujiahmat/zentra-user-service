@@ -4,20 +4,22 @@ import (
 	"github.com/faujiahmat/zentra-user-service/src/core/grpc/client"
 	"github.com/faujiahmat/zentra-user-service/src/core/grpc/delivery"
 	"github.com/faujiahmat/zentra-user-service/src/core/grpc/handler"
+	"github.com/faujiahmat/zentra-user-service/src/core/grpc/interceptor"
 	"github.com/faujiahmat/zentra-user-service/src/core/grpc/server"
 	"github.com/faujiahmat/zentra-user-service/src/interface/service"
 )
 
 func InitServer(us service.User) *server.Grpc {
 	userHandler := handler.NewUserGrpc(us)
+	unaryResponseInterceptor := interceptor.NewUnaryResponse()
 
-	grpcServer := server.NewGrpc(userHandler)
-
+	grpcServer := server.NewGrpc(userHandler, unaryResponseInterceptor)
 	return grpcServer
 }
 
 func InitClient() *client.Grpc {
-	otpDelivery, otpConn := delivery.NewOtpGrpc()
+	unaryRequestInterceptor := interceptor.NewUnaryRequest()
+	otpDelivery, otpConn := delivery.NewOtpGrpc(unaryRequestInterceptor)
 
 	grpcClient := client.NewGrpc(otpDelivery, otpConn)
 	return grpcClient

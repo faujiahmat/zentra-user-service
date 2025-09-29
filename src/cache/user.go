@@ -40,6 +40,7 @@ func (u *UserImpl) Cache(ctx context.Context, user *entity.User) {
 
 func (u *UserImpl) FindByEmail(ctx context.Context, email string) *entity.User {
 	res, err := u.redis.Get(ctx, fmt.Sprintf("user:%s", email)).Result()
+
 	if err != nil && err != redis.Nil {
 		log.Logger.WithFields(logrus.Fields{"location": "cache.UserImpl/FindByEmail", "section": "redis.Get"}).Error(err)
 		return nil

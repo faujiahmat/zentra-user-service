@@ -5,8 +5,10 @@ import (
 
 	"github.com/faujiahmat/zentra-proto/protogen/otp"
 	"github.com/faujiahmat/zentra-user-service/src/common/errors"
+	"github.com/faujiahmat/zentra-user-service/src/common/helper"
 	"github.com/faujiahmat/zentra-user-service/src/core/grpc/client"
 	v "github.com/faujiahmat/zentra-user-service/src/infrastructure/validator"
+	"github.com/faujiahmat/zentra-user-service/src/interface/cache"
 	"github.com/faujiahmat/zentra-user-service/src/interface/repository"
 	"github.com/faujiahmat/zentra-user-service/src/interface/service"
 	"github.com/faujiahmat/zentra-user-service/src/model/dto"
@@ -19,12 +21,14 @@ import (
 type UserImpl struct {
 	grpcClient     *client.Grpc
 	userRepository repository.User
+	userCache      cache.User
 }
 
-func NewUser(gc *client.Grpc, ur repository.User) service.User {
+func NewUser(gc *client.Grpc, ur repository.User, uc cache.User) service.User {
 	return &UserImpl{
 		grpcClient:     gc,
 		userRepository: ur,
+		userCache:      uc,
 	}
 }
 
@@ -42,8 +46,11 @@ func (u *UserImpl) FindByEmail(ctx context.Context, email string) (*entity.User,
 		return nil, err
 	}
 
-	res, err := u.userRepository.FindByFields(ctx, &entity.User{Email: email})
+	if userCache := u.userCache.FindByEmail(ctx, email); userCache != nil {
+		return userCache, nil
+	}
 
+	res, err := u.userRepository.FindByFields(ctx, &entity.User{Email: email})
 	return res, err
 }
 
@@ -73,28 +80,25 @@ func (u *UserImpl) UpdateProfile(ctx context.Context, data *dto.UpdateProfileReq
 		return nil, err
 	}
 
-	user, err := u.userRepository.FindByFields(ctx, &entity.User{
-		Email: data.Email,
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
+	user := u.userCache.FindByEmail(ctx, data.Email)
 	if user == nil {
-		return nil, &errors.Response{
-			HttpCode: 404,
-			GrpcCode: codes.NotFound,
-			Message:  "user not found",
+		res, err := u.userRepository.FindByFields(ctx, &entity.User{
+			Email: data.Email,
+		})
+
+		if err != nil {
+			return nil, err
 		}
+
+		if res == nil {
+			return nil, &errors.Response{HttpCode: 404, GrpcCode: codes.NotFound, Message: "user not found"}
+		}
+
+		user = res
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(data.Password)); err != nil {
-		return nil, &errors.Response{
-			HttpCode: 400,
-			GrpcCode: codes.InvalidArgument,
-			Message:  "password is invalid",
-		}
+		return nil, &errors.Response{HttpCode: 400, GrpcCode: codes.InvalidArgument, Message: "password is invalid"}
 	}
 
 	res, err := u.userRepository.UpdateByEmail(ctx, &entity.User{
@@ -111,38 +115,35 @@ func (u *UserImpl) UpdatePassword(ctx context.Context, data *dto.UpdatePasswordR
 		return err
 	}
 
-	user, err := u.userRepository.FindByFields(ctx, &entity.User{
-		Email: data.Email,
-	})
-
-	if err != nil {
-		return err
-	}
-
+	user := u.userCache.FindByEmail(ctx, data.Email)
 	if user == nil {
-		return &errors.Response{
-			HttpCode: 404,
-			GrpcCode: codes.NotFound,
-			Message:  "user not found",
+		res, err := u.userRepository.FindByFields(ctx, &entity.User{
+			Email: data.Email,
+		})
+
+		if err != nil {
+			return err
 		}
+
+		if res == nil {
+			return &errors.Response{HttpCode: 404, GrpcCode: codes.NotFound, Message: "user not found"}
+		}
+
+		user = res
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(data.Password)); err != nil {
-		return &errors.Response{
-			HttpCode: 400,
-			GrpcCode: codes.InvalidArgument,
-			Message:  "password is invalid",
-		}
+		return &errors.Response{HttpCode: 400, GrpcCode: codes.InvalidArgument, Message: "password is invalid"}
 	}
 
-	enctyptPwd, err := bcrypt.GenerateFromPassword([]byte(data.NewPassword), bcrypt.DefaultCost)
+	encryptPwd, err := bcrypt.GenerateFromPassword([]byte(data.NewPassword), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
 
 	_, err = u.userRepository.UpdateByEmail(ctx, &entity.User{
 		Email:    data.Email,
-		Password: string(enctyptPwd),
+		Password: string(encryptPwd),
 	})
 
 	return err
@@ -153,28 +154,25 @@ func (u *UserImpl) UpdateEmail(ctx context.Context, data *dto.UpdateEmailReq) (n
 		return "", err
 	}
 
-	user, err := u.userRepository.FindByFields(ctx, &entity.User{
-		Email: data.Email,
-	})
-
-	if err != nil {
-		return "", err
-	}
-
+	user := u.userCache.FindByEmail(ctx, data.Email)
 	if user == nil {
-		return "", &errors.Response{
-			HttpCode: 404,
-			GrpcCode: codes.NotFound,
-			Message:  "user not found",
+		res, err := u.userRepository.FindByFields(ctx, &entity.User{
+			Email: data.Email,
+		})
+
+		if err != nil {
+			return "", err
 		}
+
+		if res == nil {
+			return "", &errors.Response{HttpCode: 404, GrpcCode: codes.NotFound, Message: "user not found"}
+		}
+
+		user = res
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(data.Password)); err != nil {
-		return "", &errors.Response{
-			HttpCode: 400,
-			GrpcCode: codes.InvalidArgument,
-			Message:  "password is invalid",
-		}
+		return "", &errors.Response{HttpCode: 400, GrpcCode: codes.InvalidArgument, Message: "password is invalid"}
 	}
 
 	go u.grpcClient.Otp.Send(ctx, data.NewEmail)
@@ -197,10 +195,7 @@ func (u *UserImpl) VerifyUpdateEmail(ctx context.Context, data *dto.VerifyUpdate
 	}
 
 	if !verifyRes.Valid {
-		return nil, &errors.Response{
-			HttpCode: 400,
-			Message:  "otp is invalid",
-		}
+		return nil, &errors.Response{HttpCode: 400, Message: "otp is invalid"}
 	}
 
 	res, err := u.userRepository.UpdateEmail(ctx, data.Email, data.NewEmail)
@@ -208,14 +203,19 @@ func (u *UserImpl) VerifyUpdateEmail(ctx context.Context, data *dto.VerifyUpdate
 		return nil, err
 	}
 
-	user := new(dto.SanitizedUserRes)
+	accessToken, err := helper.GenerateAccessToken(res.UserId, res.Email, res.Role)
+	if err != nil {
+		return nil, err
+	}
 
+	user := new(dto.SanitizedUserRes)
 	if err := copier.Copy(user, res); err != nil {
 		return nil, err
 	}
 
 	return &dto.VerifyUpdateEmailRes{
-		Data: user,
+		Data:        user,
+		AccessToken: accessToken,
 	}, nil
 }
 

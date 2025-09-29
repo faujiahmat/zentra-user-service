@@ -1,5 +1,8 @@
 .env
 dummy*.*
 script.sh
-
+keys
+app.log
+workspace
+app.log
 cmd/main

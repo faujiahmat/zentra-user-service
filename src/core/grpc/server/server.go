@@ -6,23 +6,27 @@ import (
 
 	"github.com/faujiahmat/zentra-proto/protogen/user"
 	"github.com/faujiahmat/zentra-user-service/src/common/log"
+	"github.com/faujiahmat/zentra-user-service/src/core/grpc/interceptor"
 	"github.com/faujiahmat/zentra-user-service/src/infrastructure/config"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
 
 type Grpc struct {
-	port            string
-	server          *grpc.Server
-	userGrpcHandler user.UserServiceServer
+	port                     string
+	server                   *grpc.Server
+	userGrpcHandler          user.UserServiceServer
+	unaryResponseInterceptor *interceptor.UnaryResponse
 }
 
-func NewGrpc(userGrpcHandler user.UserServiceServer) *Grpc {
+// this main grpc server
+func NewGrpc(userGrpcHandler user.UserServiceServer, uri *interceptor.UnaryResponse) *Grpc {
 	port := config.Conf.CurrentApp.GrpcPort
 
 	return &Grpc{
-		port:            port,
-		userGrpcHandler: userGrpcHandler,
+		port:                     port,
+		userGrpcHandler:          userGrpcHandler,
+		unaryResponseInterceptor: uri,
 	}
 }
 
@@ -34,7 +38,11 @@ func (g *Grpc) Run() {
 
 	log.Logger.Infof("grpc run in port: %s", g.port)
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(
+			g.unaryResponseInterceptor.Recovery,
+			g.unaryResponseInterceptor.Error,
+		))
 
 	g.server = grpcServer
 

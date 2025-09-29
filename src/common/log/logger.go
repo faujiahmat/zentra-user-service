@@ -10,7 +10,7 @@ import (
 var Logger = logrus.New()
 
 func init() {
-	appStatus := os.Getenv("PRASORGANIC_APP_STATUS")
+	appStatus := os.Getenv("ZENTRA_APP_STATUS")
 
 	Logger.SetFormatter(&ecslogrus.Formatter{
 		PrettyPrint: true,

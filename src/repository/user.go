@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/faujiahmat/zentra-user-service/src/common/errors"
+	"github.com/faujiahmat/zentra-user-service/src/interface/cache"
 	"github.com/faujiahmat/zentra-user-service/src/interface/repository"
 	"github.com/faujiahmat/zentra-user-service/src/model/dto"
 	"github.com/faujiahmat/zentra-user-service/src/model/entity"
@@ -14,12 +15,14 @@ import (
 )
 
 type UserImpl struct {
-	db *gorm.DB
+	db        *gorm.DB
+	userCache cache.User
 }
 
-func NewUser(db *gorm.DB) repository.User {
+func NewUser(db *gorm.DB, uc cache.User) repository.User {
 	return &UserImpl{
-		db: db,
+		db:        db,
+		userCache: uc,
 	}
 }
 
@@ -29,6 +32,7 @@ func (u *UserImpl) Create(ctx context.Context, data *dto.CreateReq) error {
 	user := new(entity.User)
 
 	if err := u.db.WithContext(ctx).Raw(query, data.UserId, data.Email, data.FullName, data.Password).Scan(user).Error; err != nil {
+
 		if errPG, ok := err.(*pgconn.PgError); ok && errPG.Code == "23505" {
 			return &errors.Response{
 				HttpCode: 409,
@@ -39,6 +43,8 @@ func (u *UserImpl) Create(ctx context.Context, data *dto.CreateReq) error {
 
 		return err
 	}
+
+	go u.userCache.Cache(context.Background(), user)
 
 	return nil
 }
@@ -54,6 +60,8 @@ func (u *UserImpl) FindByFields(ctx context.Context, fields *entity.User) (*enti
 	if res.RowsAffected == 0 {
 		return nil, nil
 	}
+
+	go u.userCache.Cache(context.Background(), user)
 
 	return user, nil
 }
@@ -74,10 +82,16 @@ func (u *UserImpl) Upsert(ctx context.Context, data *dto.UpsertReq) (*entity.Use
 	`
 
 	if err := u.db.WithContext(ctx).Raw(
-		query, data.UserId, data.Email, data.FullName, data.PhotoProfile, data.RefreshToken,
-	).Scan(user).Error; err != nil {
+		query,
+		data.UserId,
+		data.Email,
+		data.FullName,
+		data.PhotoProfile,
+		data.RefreshToken).Scan(user).Error; err != nil {
 		return nil, err
 	}
+
+	go u.userCache.Cache(context.Background(), user)
 
 	return user, nil
 }
@@ -86,15 +100,17 @@ func (u *UserImpl) UpdateByEmail(ctx context.Context, data *entity.User) (*entit
 	user := new(entity.User)
 
 	res := u.db.WithContext(ctx).Where("email = ?", data.Email).Updates(data).Clauses(clause.Returning{
-		Columns: []clause.Column{
-			{
-				Name: "*",
-			},
-		},
+		Columns: []clause.Column{{
+			Name: "*",
+		}},
 	}).Find(user)
 
 	if res.Error != nil {
 		return nil, res.Error
+	}
+
+	if res.RowsAffected > 0 {
+		go u.userCache.Cache(context.Background(), user)
 	}
 
 	return user, nil
@@ -111,6 +127,11 @@ func (u *UserImpl) UpdateEmail(ctx context.Context, email string, newEmail strin
 		return nil, res.Error
 	}
 
+	if res.RowsAffected > 0 {
+		go u.userCache.DeleteByEmail(context.Background(), email)
+		go u.userCache.Cache(context.Background(), user)
+	}
+
 	return user, nil
 }
 
@@ -122,6 +143,10 @@ func (u *UserImpl) SetNullRefreshToken(ctx context.Context, refreshToken string)
 	res := u.db.WithContext(ctx).Raw(query, refreshToken).Scan(user)
 	if res.Error != nil {
 		return res.Error
+	}
+
+	if res.RowsAffected > 0 {
+		go u.userCache.Cache(context.Background(), user)
 	}
 
 	return nil
