@@ -78,7 +78,7 @@ func (f *FindByEmailTestSuite) Test_Success() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	auth := base64.StdEncoding.EncodeToString([]byte("prasorganic-auth:rahasia"))
+	auth := base64.StdEncoding.EncodeToString([]byte("zentra-auth:rahasia"))
 	ctx = metadata.AppendToOutgoingContext(ctx, "authorization", "Basic "+auth)
 
 	res, err := f.userGrpcDelivery.FindByEmail(ctx, &pb.Email{Email: f.user.Email})
@@ -94,7 +94,7 @@ func (f *FindByEmailTestSuite) Test_NotFound() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	auth := base64.StdEncoding.EncodeToString([]byte("prasorganic-auth:rahasia"))
+	auth := base64.StdEncoding.EncodeToString([]byte("zentra-auth:rahasia"))
 	ctx = metadata.AppendToOutgoingContext(ctx, "authorization", "Basic "+auth)
 
 	res, err := f.userGrpcDelivery.FindByEmail(ctx, &pb.Email{Email: "usernotfound@gmail.com"})

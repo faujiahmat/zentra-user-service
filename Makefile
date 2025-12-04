@@ -1,5 +1,5 @@
 # Postgres
-DB_URL := 'postgres://postgres:fauji3423+@localhost:5432/zentra-user-database?sslmode=disable'
+DB_URL := 'postgres://postgres:fauji3423+@localhost:5433/zentra-user-database?sslmode=disable'
 
 # Redis cluster
 CONF_DIR=./docs/database/redis

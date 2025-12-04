@@ -3,7 +3,7 @@ services:
     container_name: zentra-user-service-postgres
     image: postgres:16.0
     ports:
-      - 5432:5432
+      - 5433:5432
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -169,11 +169,13 @@ services:
       - zentra-user-service-redis-node-5
       - zentra-user-service-redis-node-6
     environment:
-      - ZENTRA_APP_STATUS=DEVELOPMENT
-      - ZENTRA_USER_SERVICE_WORKSPACE=/app/workspace
+      - ZENTRA_APP_STATUS=PRODUCTION
+      - ZENTRA_CONFIG_ADDRESS=[vault_address]
+      - ZENTRA_CONFIG_TOKEN=[vault_token]
     volumes:
       - ./workspace:/app/workspace
       - ./tmp:/app/workspace/tmp
+      - zentra-user-service-logs:/app
     restart: on-failure
 
 volumes:
@@ -191,6 +193,8 @@ volumes:
     name: zentra-user-service-redis-data-node-5
   zentra-user-service-redis-data-node-6:
     name: zentra-user-service-redis-data-node-6
+  zentra-user-service-logs:
+    name: zentra-user-service-logs
 
 networks:
   zentra-network:
